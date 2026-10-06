@@ -11,13 +11,13 @@ export async function RepositoryList({ title, visibility }: { title: string; vis
   const repositories = await RepositoryService.listMine(await createClient(), profile.id, visibility);
 
   return (
-    <div>
-      <div style={{ display: "flex", justifyContent: "space-between", gap: "1rem", alignItems: "center" }}>
+    <div className="stack">
+      <div className="page-head">
         <h1>{title}</h1>
         <CreateRepositoryForm />
       </div>
       {repositories.length === 0 ? (
-        <div className="card" style={{ padding: "1.2rem" }}>
+        <div className="card panel">
           <h2>No repositories yet.</h2>
           <p className="muted">Create your first repository to start organizing your files.</p>
         </div>

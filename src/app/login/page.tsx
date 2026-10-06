@@ -13,11 +13,10 @@ export default async function LoginPage({ searchParams }: { searchParams: Promis
   return (
     <>
       <SiteHeader profile={profile} />
-      <main className="shell" style={{ maxWidth: 460, paddingBottom: "3rem" }}>
+      <main className="shell auth-panel page-canvas">
         <h1>Log in</h1>
-        <p className="muted">Email and password are supported now. OAuth can be enabled later from Supabase.</p>
         <LoginForm next={safeNextPath(params.next)} />
-        <p>New here? <Link href="/register">Create an account</Link></p>
+        <p className="auth-switch">New here? <Link href="/register">Create an account</Link></p>
       </main>
     </>
   );

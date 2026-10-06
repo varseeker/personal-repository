@@ -46,7 +46,7 @@ export default async function BlobPage({ params }: { params: Promise<Params> }) 
   return (
     <>
       <SiteHeader profile={profile} />
-      <main className="shell" style={{ paddingBottom: "3rem" }}>
+      <main className="shell page-canvas" style={{ paddingBottom: "3rem" }}>
         <p className="muted">
           <Link href={`/u/${view.owner.username}/${view.repository.slug}`}>{view.repository.name}</Link>
           {view.breadcrumbs.slice(1).map((crumb) => <span key={crumb.href}> / <Link href={crumb.href}>{crumb.label}</Link></span>)}

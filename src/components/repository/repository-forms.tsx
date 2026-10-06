@@ -21,8 +21,8 @@ export function CreateRepositoryForm() {
           }}>
             <h2>Create repository</h2>
             <p className="muted">New repositories are private until you explicitly make them public.</p>
-            <label className="field">Name<input className="input" name="name" required /></label>
-            <label className="field">Description<textarea className="textarea" name="description" /></label>
+            <label className="field"><span>Name</span><input className="input" name="name" required /></label>
+            <label className="field"><span>Description</span><textarea className="textarea" name="description" /></label>
             {state ? <p className="form-error">{state}</p> : null}
             <div className="inline-actions" style={{ marginTop: "0.8rem" }}>
               <button className="btn" type="button" onClick={() => setOpen(false)}>Cancel</button>
@@ -43,8 +43,8 @@ export function RepositorySettingsForm({ repository }: { repository: Repository 
   const [confirmation, setConfirmation] = useState("");
 
   return (
-    <div style={{ display: "grid", gap: "1rem" }}>
-      <form className="card" style={{ padding: "1rem", display: "grid", gap: "0.8rem" }} action={async (formData) => {
+    <div className="stack">
+      <form className="card form-card" action={async (formData) => {
         const result = await updateRepositoryAction(repository.id, formData);
         if (!result.ok) toast(result.error, "error");
         else {
@@ -53,15 +53,17 @@ export function RepositorySettingsForm({ repository }: { repository: Repository 
         }
       }}>
         <h2>General</h2>
-        <label className="field">Name<input className="input" name="name" defaultValue={repository.name} required /></label>
-        <label className="field">Description<textarea className="textarea" name="description" defaultValue={repository.description ?? ""} /></label>
+        <label className="field"><span>Name</span><input className="input" name="name" defaultValue={repository.name} required /></label>
+        <label className="field"><span>Description</span><textarea className="textarea" name="description" defaultValue={repository.description ?? ""} /></label>
         <button className="btn btn-primary" type="submit">Save</button>
       </form>
 
-      <section className="card" style={{ padding: "1rem" }}>
+      <section className="card panel">
         <h2>Visibility</h2>
-        <label><input type="radio" name="visibility" checked={visibility === "private"} onChange={() => setVisibility("private")} /> Private</label>
-        <label style={{ marginLeft: "1rem" }}><input type="radio" name="visibility" checked={visibility === "public"} onChange={() => setVisibility("public")} /> Public</label>
+        <div className="inline-actions">
+          <label><input type="radio" name="visibility" checked={visibility === "private"} onChange={() => setVisibility("private")} /> Private</label>
+          <label><input type="radio" name="visibility" checked={visibility === "public"} onChange={() => setVisibility("public")} /> Public</label>
+        </div>
         <div style={{ marginTop: "0.8rem" }}>
           <button className="btn" type="button" onClick={() => {
             if (visibility === "public" && repository.visibility !== "public") setConfirmPublic(true);
@@ -94,7 +96,7 @@ export function RepositorySettingsForm({ repository }: { repository: Repository 
         </dialog>
       ) : null}
 
-      <section className="card" style={{ padding: "1rem", display: "grid", gap: "0.7rem" }}>
+      <section className="card form-card">
         <h2>Danger zone</h2>
         <p>Delete this repository and every file inside it. This cannot be undone.</p>
         <label className="field">Type “{repository.name}” to confirm

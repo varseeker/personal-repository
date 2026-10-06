@@ -11,10 +11,10 @@ export default async function RegisterPage() {
   return (
     <>
       <SiteHeader profile={profile} />
-      <main className="shell" style={{ maxWidth: 520, paddingBottom: "3rem" }}>
+      <main className="shell auth-panel auth-panel-wide page-canvas">
         <h1>Create an account</h1>
         <RegisterForm />
-        <p>Already registered? <Link href="/login">Log in</Link></p>
+        <p className="auth-switch">Already registered? <Link href="/login">Log in</Link></p>
       </main>
     </>
   );

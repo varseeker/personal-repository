@@ -28,7 +28,7 @@ export default async function RepositorySettingsPage({
   return (
     <>
       <SiteHeader profile={profile} />
-      <main className="shell" style={{ paddingBottom: "3rem" }}>
+      <main className="shell page-canvas" style={{ paddingBottom: "3rem" }}>
         <h1>{view.repository.name} settings</h1>
         <section className="card quota" style={{ padding: "1rem", marginBottom: "1rem" }}>
           <h2>Storage</h2>

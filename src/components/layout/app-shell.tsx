@@ -4,63 +4,96 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { Menu, X } from "lucide-react";
 import { useState } from "react";
-import { ThemeToggle } from "@/components/layout/theme-toggle";
 import { logoutAction } from "@/actions/auth.actions";
+import { ThemeToggle } from "@/components/layout/theme-toggle";
+import { dashboardNav, isNavActive } from "@/components/layout/nav-items";
 
-const links = [
-  { href: "/dashboard", label: "Dashboard" },
-  { href: "/dashboard/repositories", label: "All repositories" },
-  { href: "/dashboard/repositories/public", label: "My public repositories" },
-  { href: "/dashboard/repositories/private", label: "My private repositories" },
-  { href: "/public-repositories", label: "Public repositories" },
-  { href: "/settings", label: "Settings" },
-];
-
-export function AppShell({ children, username }: { children: React.ReactNode; username: string }) {
+export function AppShell({
+  children,
+  username,
+  displayName,
+}: {
+  children: React.ReactNode;
+  username: string;
+  displayName: string;
+}) {
   const pathname = usePathname();
   const [open, setOpen] = useState(false);
+  const current = dashboardNav.find((item) => isNavActive(pathname, item));
 
   return (
     <div className="app-frame">
-      <aside className={open ? "sidebar open" : "sidebar"}>
-        <Link href="/" className="brand" style={{ marginBottom: "1rem" }}>
+      <aside className={open ? "sidebar open" : "sidebar"} id="dashboard-nav">
+        <Link href="/dashboard" className="brand sidebar-brand" onClick={() => setOpen(false)}>
           <span className="brand-mark" aria-hidden="true">R</span>
-          Repository
+          <span>Dashboard</span>
         </Link>
-        <p className="sidebar-group">Workspace</p>
-        {links.slice(0, 1).map((link) => (
-          <Link key={link.href} href={link.href} aria-current={pathname === link.href ? "page" : undefined} onClick={() => setOpen(false)}>
-            {link.label}
-          </Link>
-        ))}
-        <p className="sidebar-group">Repositories</p>
-        {links.slice(1, 4).map((link) => (
-          <Link key={link.href} href={link.href} aria-current={pathname === link.href ? "page" : undefined} onClick={() => setOpen(false)}>
-            {link.label}
-          </Link>
-        ))}
-        <p className="sidebar-group">Discover</p>
-        {links.slice(4).map((link) => (
-          <Link key={link.href} href={link.href} aria-current={pathname === link.href ? "page" : undefined} onClick={() => setOpen(false)}>
-            {link.label}
-          </Link>
-        ))}
-        <div style={{ marginTop: "auto", display: "grid", gap: "0.6rem" }}>
-          <span className="muted">Signed in as {username}</span>
+        <nav aria-label="Dashboard">
+          <p className="sidebar-group">Your workspace</p>
+          {dashboardNav.map((item) => {
+            const Icon = item.icon;
+            const active = isNavActive(pathname, item);
+            return (
+              <Link
+                key={item.href}
+                href={item.href}
+                className="nav-item"
+                aria-current={active ? "page" : undefined}
+                onClick={() => setOpen(false)}
+              >
+                <Icon size={16} aria-hidden="true" />
+                <span>
+                  <strong>{item.label}</strong>
+                  <small>{item.description}</small>
+                </span>
+              </Link>
+            );
+          })}
+        </nav>
+        <div className="sidebar-foot">
+          <p className="muted" style={{ margin: 0 }}>
+            {displayName}
+            <br />
+            @{username}
+          </p>
           <form action={logoutAction}>
             <button className="btn" type="submit">Log out</button>
           </form>
         </div>
       </aside>
-      <div>
-        <div className="content" style={{ display: "flex", justifyContent: "space-between", paddingBottom: 0 }}>
-          <button type="button" className="icon-btn mobile-only" aria-label={open ? "Close menu" : "Open menu"} onClick={() => setOpen((value) => !value)}>
+      <button
+        type="button"
+        className={open ? "sidebar-backdrop show" : "sidebar-backdrop"}
+        aria-label="Close menu"
+        onClick={() => setOpen(false)}
+      />
+      <div className="app-main">
+        <header className="app-topbar">
+          <button
+            type="button"
+            className="icon-btn mobile-only"
+            aria-label={open ? "Close menu" : "Open dashboard menu"}
+            aria-expanded={open}
+            aria-controls="dashboard-nav"
+            onClick={() => setOpen((value) => !value)}
+          >
             {open ? <X size={16} aria-hidden="true" /> : <Menu size={16} aria-hidden="true" />}
           </button>
-          <span />
+          <div className="app-topbar-title">
+            <span className="muted">Dashboard</span>
+            <strong>{current?.label ?? "Dashboard"}</strong>
+          </div>
+          <nav className="feature-nav" aria-label="Dashboard features">
+            <span className="feature-nav-label">Features</span>
+            {dashboardNav.map((item) => (
+              <Link key={item.href} href={item.href} aria-current={isNavActive(pathname, item) ? "page" : undefined}>
+                {item.shortLabel}
+              </Link>
+            ))}
+          </nav>
           <ThemeToggle />
-        </div>
-        <main className="content">{children}</main>
+        </header>
+        <main className="app-content">{children}</main>
       </div>
     </div>
   );

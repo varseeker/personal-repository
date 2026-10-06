@@ -12,7 +12,7 @@ export default async function SettingsPage() {
   if (!profile) redirect("/login?next=/settings");
 
   return (
-    <AppShell username={profile.username}>
+    <AppShell username={profile.username} displayName={profile.display_name}>
       <h1>Settings</h1>
       <ProfileForm profile={profile} />
     </AppShell>

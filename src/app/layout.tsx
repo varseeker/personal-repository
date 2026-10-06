@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
+import { SiteFooter } from "@/components/layout/site-footer";
 import { AppThemeProvider } from "@/components/layout/theme-provider";
 import { ToastProvider } from "@/components/ui/toast";
 import { getCurrentProfile } from "@/lib/auth/session";
@@ -31,9 +32,12 @@ export default async function RootLayout({ children }: { children: React.ReactNo
 
   return (
     <html lang="en" className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`} suppressHydrationWarning>
-      <body className="min-h-full">
+      <body className="site-body">
         <AppThemeProvider>
-          <ToastProvider>{children}</ToastProvider>
+          <ToastProvider>
+            <div className="site-body-main">{children}</div>
+            <SiteFooter />
+          </ToastProvider>
         </AppThemeProvider>
       </body>
     </html>

@@ -7,7 +7,7 @@ import type { RepositoryView } from "@/lib/data/repository-view";
 export function RepositoryScreen({ view }: { view: Extract<RepositoryView, { missing: false }> }) {
   const { repository, owner } = view;
   return (
-    <div className="shell" style={{ paddingBottom: "3rem" }}>
+    <div className="shell page-canvas" style={{ paddingBottom: "3rem" }}>
       <header style={{ padding: "1.4rem 0 1rem" }}>
         <p className="muted" style={{ marginBottom: "0.3rem" }}>
           <Link href={`/u/${owner.username}/${repository.slug}`}>{owner.username}</Link> / {repository.name}

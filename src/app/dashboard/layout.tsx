@@ -9,5 +9,5 @@ export default async function DashboardLayout({ children }: { children: React.Re
   if (!supabaseBrowserEnv()) redirect("/login");
   const profile = await getCurrentProfile();
   if (!profile) redirect("/login?next=/dashboard");
-  return <AppShell username={profile.username}>{children}</AppShell>;
+  return <AppShell username={profile.username} displayName={profile.display_name}>{children}</AppShell>;
 }

@@ -30,7 +30,7 @@ export default async function HomePage() {
   return (
     <>
       <SiteHeader profile={profile} />
-      <main className="shell">
+      <main className="shell page-canvas">
         <section className="hero">
           <div>
             <p className="badge">Cloud storage for people who think in repositories</p>
@@ -53,8 +53,8 @@ assets/`}</pre>
         </section>
         <section className="feature-grid">
           {features.map(([title, copy]) => (
-            <article className="card" key={title}>
-              <h2 style={{ marginTop: 0, fontSize: "1.05rem" }}>{title}</h2>
+            <article key={title}>
+              <h2>{title}</h2>
               <p className="muted">{copy}</p>
             </article>
           ))}
@@ -69,19 +69,19 @@ assets/`}</pre>
             <span>Share</span>
           </div>
         </section>
-        <section>
-          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline" }}>
+        <section className="public-preview">
+          <div className="section-heading">
             <h2>Public repositories</h2>
             <Link className="text-link" href="/public-repositories">View all</Link>
           </div>
-          {preview.items.length === 0 ? <p className="muted">No public repositories yet.</p> : (
+          {preview.items.length === 0 ? <p className="empty-note">No public repositories yet.</p> : (
             <div className="repo-grid">
               {preview.items.map((item) => <PublicRepositoryCardView key={item.id} item={item} />)}
             </div>
           )}
         </section>
-        <section className="card" style={{ padding: "1.4rem", margin: "2rem 0 3rem" }}>
-          <h2 style={{ marginTop: 0 }}>Start building your repository today.</h2>
+        <section className="card cta-band">
+          <h2>Start building your repository today.</h2>
           <Link className="btn btn-primary" href="/register">Create account</Link>
         </section>
       </main>

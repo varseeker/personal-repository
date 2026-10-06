@@ -378,7 +378,7 @@ export function FileBrowser({
 
   return (
     <section
-      className={dragging ? "card drop-active" : "card"}
+      className={dragging ? "card browser drop-active" : "card browser"}
       onDragOver={(event) => {
         if (!canWrite) return;
         event.preventDefault();
@@ -387,8 +387,8 @@ export function FileBrowser({
       onDragLeave={() => setDragging(false)}
       onDrop={onDrop}
     >
-      <div style={{ display: "flex", justifyContent: "space-between", gap: "0.8rem", flexWrap: "wrap", padding: "0.9rem" }}>
-        <nav aria-label="Breadcrumb" style={{ display: "flex", gap: "0.35rem", flexWrap: "wrap" }}>
+      <div className="browser-bar">
+        <nav className="crumbs" aria-label="Breadcrumb">
           {breadcrumbs.map((crumb, index) => (
             <span key={crumb.href}>
               {index > 0 ? <span className="muted"> / </span> : null}
@@ -398,7 +398,7 @@ export function FileBrowser({
         </nav>
         {canWrite ? (
           <div className="inline-actions">
-            <button type="button" className="btn" onClick={() => inputRef.current?.click()}><Upload size={16} aria-hidden="true" /> Upload</button>
+            <button type="button" className="btn btn-primary" onClick={() => inputRef.current?.click()}><Upload size={16} aria-hidden="true" /> Upload</button>
             <button type="button" className="btn" onClick={() => folderInputRef.current?.click()}><FolderPlus size={16} aria-hidden="true" /> Upload folder</button>
             <button type="button" className="btn" onClick={() => setDialog("folder")}>New folder</button>
             <button type="button" className="btn" onClick={() => setDialog("file")}>New file</button>
@@ -416,7 +416,7 @@ export function FileBrowser({
       </div>
 
       {queue.length > 0 ? (
-        <div style={{ padding: "0 0.9rem 0.9rem", display: "grid", gap: "0.45rem" }}>
+        <div className="upload-queue">
           {queue.map((item) => (
             <div key={item.id}>
               <div style={{ display: "flex", justifyContent: "space-between" }}>
@@ -430,7 +430,7 @@ export function FileBrowser({
       ) : null}
 
       {folders.length === 0 && files.length === 0 ? (
-        <div style={{ padding: "2.5rem 1rem", textAlign: "center" }}>
+        <div className="browser-empty">
           <h2>This folder is empty.</h2>
           <p className="muted">Upload a file or create a folder to start organizing this repository.</p>
         </div>

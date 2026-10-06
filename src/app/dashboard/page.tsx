@@ -25,21 +25,22 @@ export default async function DashboardPage({ searchParams }: { searchParams: Pr
   const ratio = profile.storage_limit_bytes > 0 ? Math.min(100, (used / profile.storage_limit_bytes) * 100) : 0;
 
   return (
-    <div style={{ display: "grid", gap: "1rem" }}>
-      <div style={{ display: "flex", justifyContent: "space-between", gap: "1rem", flexWrap: "wrap" }}>
+    <div className="stack">
+      <div className="page-head">
         <div>
-          <h1 style={{ marginBottom: "0.2rem" }}>Welcome back, {profile.display_name}</h1>
+          <h1>Welcome back, {profile.display_name}</h1>
           <p className="muted">@{profile.username}</p>
         </div>
         <CreateRepositoryForm />
       </div>
       <form action="/dashboard">
-        <label className="field">Search your repositories, folders, and files
+        <label className="field">
+          <span>Search your repositories, folders, and files</span>
           <input className="input" name="q" defaultValue={query} placeholder="At least 2 characters" />
         </label>
       </form>
       {query.length >= 2 ? (
-        <section className="card" style={{ padding: "0.4rem 1rem 1rem" }}>
+        <section className="card panel">
           <h2>Search results</h2>
           {hits.length === 0 ? <p className="muted">No matches in your repositories.</p> : hits.map((hit) => (
             <p key={`${hit.kind}-${hit.item_id}`}>
@@ -57,7 +58,7 @@ export default async function DashboardPage({ searchParams }: { searchParams: Pr
         <article className="card"><strong>{formatBytes(used)}</strong><div className="muted">Stored</div></article>
         <article className="card"><strong>{repositories.filter((item) => item.visibility === "public").length}</strong><div className="muted">Public</div></article>
       </section>
-      <section className="card quota" style={{ padding: "1rem" }}>
+      <section className="card panel quota">
         <strong>Your storage</strong>
         <div className="progress" aria-valuemin={0} aria-valuemax={100} aria-valuenow={Math.round(ratio)} role="meter">
           <span style={{ width: `${ratio}%` }} />
@@ -67,7 +68,7 @@ export default async function DashboardPage({ searchParams }: { searchParams: Pr
       <section>
         <h2>Repositories</h2>
         {repositories.length === 0 ? (
-          <div className="card" style={{ padding: "1.2rem" }}>
+          <div className="card panel">
             <h3>No repositories yet.</h3>
             <p className="muted">Create your first repository to start organizing your files.</p>
             <CreateRepositoryForm />
@@ -76,14 +77,14 @@ export default async function DashboardPage({ searchParams }: { searchParams: Pr
           <div className="repo-grid">
             {repositories.slice(0, 6).map((repository) => (
               <article className="card" key={repository.id}>
-                <h3 style={{ marginTop: 0 }}><Link href={`/u/${profile.username}/${repository.slug}`}>{repository.name}</Link></h3>
+                <h3><Link href={`/u/${profile.username}/${repository.slug}`}>{repository.name}</Link></h3>
                 <p className="muted">{repository.visibility} · Updated {formatDate(repository.updated_at)}</p>
               </article>
             ))}
           </div>
         )}
       </section>
-      <section className="card" style={{ padding: "1rem" }}>
+      <section className="card panel">
         <h2>Recent activity</h2>
         {activity.length === 0 ? <p className="muted">Activity will appear after you create repositories and upload files.</p> : activity.map((event) => (
           <p key={event.id} className="muted">{event.event_type.replaceAll("_", " ")}{event.metadata.name ? ` · ${event.metadata.name}` : ""} · {formatDate(event.created_at)}</p>
