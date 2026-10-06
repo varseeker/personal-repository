@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { CreateRepositoryForm } from "@/components/repository/repository-forms";
+import { SubmitButton } from "@/components/ui/submit-button";
 import { getCurrentProfile } from "@/lib/auth/session";
 import { createClient } from "@/lib/supabase/server";
 import { formatBytes, formatDate } from "@/lib/utils/format";
@@ -33,11 +34,12 @@ export default async function DashboardPage({ searchParams }: { searchParams: Pr
         </div>
         <CreateRepositoryForm />
       </div>
-      <form action="/dashboard">
+      <form className="search-form" action="/dashboard">
         <label className="field">
           <span>Search your repositories, folders, and files</span>
           <input className="input" name="q" defaultValue={query} placeholder="At least 2 characters" />
         </label>
+        <SubmitButton className="btn" pendingLabel="Searching…">Search</SubmitButton>
       </form>
       {query.length >= 2 ? (
         <section className="card panel">

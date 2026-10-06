@@ -5,6 +5,7 @@ import { usePathname } from "next/navigation";
 import { Menu, X } from "lucide-react";
 import { useState } from "react";
 import { logoutAction } from "@/actions/auth.actions";
+import { SubmitButton } from "@/components/ui/submit-button";
 import { ThemeToggle } from "@/components/layout/theme-toggle";
 import { dashboardNav, isNavActive } from "@/components/layout/nav-items";
 
@@ -18,13 +19,14 @@ export function AppShell({
   displayName: string;
 }) {
   const pathname = usePathname();
-  const [open, setOpen] = useState(false);
+  const [openPath, setOpenPath] = useState<string | null>(null);
+  const open = openPath === pathname;
   const current = dashboardNav.find((item) => isNavActive(pathname, item));
 
   return (
     <div className="app-frame">
       <aside className={open ? "sidebar open" : "sidebar"} id="dashboard-nav">
-        <Link href="/dashboard" className="brand sidebar-brand" onClick={() => setOpen(false)}>
+        <Link href="/dashboard" className="brand sidebar-brand" onClick={() => setOpenPath(null)}>
           <span className="brand-mark" aria-hidden="true">R</span>
           <span>Dashboard</span>
         </Link>
@@ -39,7 +41,7 @@ export function AppShell({
                 href={item.href}
                 className="nav-item"
                 aria-current={active ? "page" : undefined}
-                onClick={() => setOpen(false)}
+                onClick={() => setOpenPath(null)}
               >
                 <Icon size={16} aria-hidden="true" />
                 <span>
@@ -57,7 +59,7 @@ export function AppShell({
             @{username}
           </p>
           <form action={logoutAction}>
-            <button className="btn" type="submit">Log out</button>
+            <SubmitButton className="btn" pendingLabel="Logging out…">Log out</SubmitButton>
           </form>
         </div>
       </aside>
@@ -65,7 +67,7 @@ export function AppShell({
         type="button"
         className={open ? "sidebar-backdrop show" : "sidebar-backdrop"}
         aria-label="Close menu"
-        onClick={() => setOpen(false)}
+        onClick={() => setOpenPath(null)}
       />
       <div className="app-main">
         <header className="app-topbar">
@@ -75,7 +77,7 @@ export function AppShell({
             aria-label={open ? "Close menu" : "Open dashboard menu"}
             aria-expanded={open}
             aria-controls="dashboard-nav"
-            onClick={() => setOpen((value) => !value)}
+            onClick={() => setOpenPath(open ? null : pathname)}
           >
             {open ? <X size={16} aria-hidden="true" /> : <Menu size={16} aria-hidden="true" />}
           </button>

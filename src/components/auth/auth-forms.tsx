@@ -2,11 +2,12 @@
 
 import { useActionState } from "react";
 import { loginAction, oauthAction, registerAction } from "@/actions/auth.actions";
+import { SubmitButton } from "@/components/ui/submit-button";
 import { appConfig } from "@/lib/config";
 import type { ActionResult } from "@/types/action";
 
 export function LoginForm({ next }: { next: string }) {
-  const [state, action, pending] = useActionState(loginAction, null);
+  const [state, action] = useActionState(loginAction, null);
   return (
     <div style={{ display: "grid", gap: "0.8rem" }}>
       <form action={action} className="card form-card">
@@ -14,7 +15,7 @@ export function LoginForm({ next }: { next: string }) {
         <label className="field"><span>Email</span><input className="input" name="email" type="email" autoComplete="email" required /></label>
         <label className="field"><span>Password</span><input className="input" name="password" type="password" autoComplete="current-password" required /></label>
         {state && !state.ok ? <p className="form-error">{state.error}</p> : null}
-        <button className="btn btn-primary" disabled={pending} type="submit">Log in</button>
+        <SubmitButton className="btn btn-primary" pendingLabel="Logging in…">Log in</SubmitButton>
       </form>
       <OAuthButtons />
     </div>
@@ -22,7 +23,7 @@ export function LoginForm({ next }: { next: string }) {
 }
 
 export function RegisterForm() {
-  const [state, action, pending] = useActionState(registerAction, null);
+  const [state, action] = useActionState(registerAction, null);
   return (
     <div style={{ display: "grid", gap: "0.8rem" }}>
       <form action={action} className="card form-card">
@@ -31,8 +32,7 @@ export function RegisterForm() {
         <label className="field"><span>Email</span><input className="input" name="email" type="email" autoComplete="email" required /></label>
         <label className="field"><span>Password</span><input className="input" name="password" type="password" autoComplete="new-password" minLength={8} required /></label>
         {state && !state.ok ? <p className="form-error">{state.error}</p> : null}
-        {state?.ok ? <p>Check your email to confirm the account, then log in.</p> : null}
-        <button className="btn btn-primary" disabled={pending} type="submit">Create account</button>
+        <SubmitButton className="btn btn-primary" pendingLabel="Creating account…">Create account</SubmitButton>
       </form>
       <OAuthButtons />
     </div>

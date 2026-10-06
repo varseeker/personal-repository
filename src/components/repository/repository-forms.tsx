@@ -3,6 +3,8 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { createRepositoryAction, deleteRepositoryAction, setVisibilityAction, updateRepositoryAction } from "@/actions/repository.actions";
+import { Modal } from "@/components/ui/modal";
+import { SubmitButton } from "@/components/ui/submit-button";
 import { useToast } from "@/components/ui/toast";
 import type { Repository } from "@/types/repository";
 
@@ -14,7 +16,7 @@ export function CreateRepositoryForm() {
     <>
       <button className="btn btn-primary" type="button" onClick={() => setOpen(true)}>Create repository</button>
       {open ? (
-        <dialog open>
+        <Modal onClose={() => setOpen(false)}>
           <form action={async (formData) => {
             const result = await createRepositoryAction(null, formData);
             if (result && !result.ok) setState(result.error);
@@ -26,10 +28,10 @@ export function CreateRepositoryForm() {
             {state ? <p className="form-error">{state}</p> : null}
             <div className="inline-actions" style={{ marginTop: "0.8rem" }}>
               <button className="btn" type="button" onClick={() => setOpen(false)}>Cancel</button>
-              <button className="btn btn-primary" type="submit">Create</button>
+              <SubmitButton className="btn btn-primary" pendingLabel="Creating…">Create</SubmitButton>
             </div>
           </form>
-        </dialog>
+        </Modal>
       ) : null}
     </>
   );
@@ -41,6 +43,7 @@ export function RepositorySettingsForm({ repository }: { repository: Repository 
   const [visibility, setVisibility] = useState(repository.visibility);
   const [confirmPublic, setConfirmPublic] = useState(false);
   const [confirmation, setConfirmation] = useState("");
+  const [working, setWorking] = useState<"visibility" | "public" | "delete" | null>(null);
 
   return (
     <div className="stack">
@@ -55,7 +58,7 @@ export function RepositorySettingsForm({ repository }: { repository: Repository 
         <h2>General</h2>
         <label className="field"><span>Name</span><input className="input" name="name" defaultValue={repository.name} required /></label>
         <label className="field"><span>Description</span><textarea className="textarea" name="description" defaultValue={repository.description ?? ""} /></label>
-        <button className="btn btn-primary" type="submit">Save</button>
+        <SubmitButton className="btn btn-primary" pendingLabel="Saving…">Save</SubmitButton>
       </form>
 
       <section className="card panel">
@@ -65,35 +68,43 @@ export function RepositorySettingsForm({ repository }: { repository: Repository 
           <label><input type="radio" name="visibility" checked={visibility === "public"} onChange={() => setVisibility("public")} /> Public</label>
         </div>
         <div style={{ marginTop: "0.8rem" }}>
-          <button className="btn" type="button" onClick={() => {
+          <button className="btn" type="button" disabled={working !== null} aria-busy={working === "visibility" || undefined} onClick={() => {
             if (visibility === "public" && repository.visibility !== "public") setConfirmPublic(true);
-            else void setVisibilityAction(repository.id, visibility, true).then((result) => {
-              if (!result.ok) toast(result.error, "error");
-              else {
-                toast("Visibility updated.");
-                router.refresh();
-              }
-            });
-          }}>Save visibility</button>
+            else {
+              setWorking("visibility");
+              void setVisibilityAction(repository.id, visibility, true).then((result) => {
+                setWorking(null);
+                if (!result.ok) toast(result.error, "error");
+                else {
+                  toast("Visibility updated.");
+                  router.refresh();
+                }
+              });
+            }
+          }}>{working === "visibility" ? "Saving…" : "Save visibility"}</button>
         </div>
       </section>
 
       {confirmPublic ? (
-        <dialog open>
+        <Modal onClose={() => { if (!working) setConfirmPublic(false); }}>
           <h2>Make this repository public?</h2>
           <p>Anyone on the internet will be able to view and download files in this repository.</p>
           <div className="inline-actions">
             <button className="btn" type="button" onClick={() => setConfirmPublic(false)}>Cancel</button>
-            <button className="btn btn-primary" type="button" onClick={() => void setVisibilityAction(repository.id, "public", true).then((result) => {
-              setConfirmPublic(false);
-              if (!result.ok) toast(result.error, "error");
-              else {
-                toast("Repository is now public.");
-                router.refresh();
-              }
-            })}>Make public</button>
+            <button className="btn btn-primary" type="button" disabled={working !== null} aria-busy={working === "public" || undefined} onClick={() => {
+              setWorking("public");
+              void setVisibilityAction(repository.id, "public", true).then((result) => {
+                setWorking(null);
+                setConfirmPublic(false);
+                if (!result.ok) toast(result.error, "error");
+                else {
+                  toast("Repository is now public.");
+                  router.refresh();
+                }
+              });
+            }}>{working === "public" ? "Saving…" : "Make public"}</button>
           </div>
-        </dialog>
+        </Modal>
       ) : null}
 
       <section className="card form-card">
@@ -102,9 +113,13 @@ export function RepositorySettingsForm({ repository }: { repository: Repository 
         <label className="field">Type “{repository.name}” to confirm
           <input className="input" value={confirmation} onChange={(event) => setConfirmation(event.target.value)} />
         </label>
-        <button className="btn btn-danger" type="button" onClick={() => void deleteRepositoryAction(repository.id, confirmation).then((result) => {
-          if (result && !result.ok) toast(result.error, "error");
-        })}>Delete repository</button>
+        <button className="btn btn-danger" type="button" disabled={working !== null} aria-busy={working === "delete" || undefined} onClick={() => {
+          setWorking("delete");
+          void deleteRepositoryAction(repository.id, confirmation).then((result) => {
+            setWorking(null);
+            if (result && !result.ok) toast(result.error, "error");
+          });
+        }}>{working === "delete" ? "Deleting…" : "Delete repository"}</button>
       </section>
     </div>
   );

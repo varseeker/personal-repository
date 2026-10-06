@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { SiteHeader } from "@/components/layout/site-header";
+import { SubmitButton } from "@/components/ui/submit-button";
 import { PublicRepositoryCardView } from "@/components/repository/repository-card";
 import { getCurrentProfile } from "@/lib/auth/session";
 import { supabaseBrowserEnv } from "@/lib/supabase/env";
@@ -72,7 +73,7 @@ export default async function PublicRepositoriesPage({
               {sorts.map((item) => <option key={item.id} value={item.id}>{item.label}</option>)}
             </select>
           </label>
-          <button className="btn btn-primary" type="submit">Search</button>
+          <SubmitButton className="btn btn-primary" pendingLabel="Searching…">Search</SubmitButton>
         </form>
         <p className="muted catalog-meta">{result.total} {result.total === 1 ? "repository" : "repositories"}</p>
         {result.items.length === 0 ? <p className="empty-note">No public repositories found.</p> : (

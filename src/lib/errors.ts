@@ -52,6 +52,9 @@ export function friendlyError(error: unknown): string {
   if (message.includes("user already registered") || message.includes("already been registered")) {
     return "An account with that email already exists.";
   }
+  if (message.includes("email not confirmed")) {
+    return "The account was created, but sign-in is still waiting on email confirmation.";
+  }
   if (message.includes("password")) return "Choose a password of at least 8 characters.";
   if (message.includes("rate")) return "Too many attempts. Please wait and try again.";
 

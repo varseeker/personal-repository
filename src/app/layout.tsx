@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import { SiteFooter } from "@/components/layout/site-footer";
 import { AppThemeProvider } from "@/components/layout/theme-provider";
+import { RouteProgress } from "@/components/ui/route-progress";
 import { ToastProvider } from "@/components/ui/toast";
 import { getCurrentProfile } from "@/lib/auth/session";
 import { supabaseBrowserEnv } from "@/lib/supabase/env";
@@ -35,6 +36,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
       <body className="site-body">
         <AppThemeProvider>
           <ToastProvider>
+            <RouteProgress />
             <div className="site-body-main">{children}</div>
             <SiteFooter />
           </ToastProvider>

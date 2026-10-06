@@ -5,6 +5,7 @@ import { z } from "zod";
 import { appConfig } from "@/lib/config";
 import { friendlyError, isNextRedirect, logServerError } from "@/lib/errors";
 import { clientIp, rateLimit } from "@/lib/security/rate-limit";
+import { createAdminClient } from "@/lib/supabase/admin";
 import { createClient } from "@/lib/supabase/server";
 import { safeNextPath } from "@/lib/utils/format";
 import type { ActionResult } from "@/types/action";
@@ -55,8 +56,20 @@ export async function registerAction(_state: ActionResult | null, formData: Form
     });
 
     if (error) return { ok: false, error: friendlyError(error) };
+    if (data.user && data.user.identities?.length === 0) {
+      return { ok: false, error: "An account with that email already exists." };
+    }
     if (!data.session) {
-      return { ok: true, data: undefined };
+      const admin = createAdminClient();
+      if (admin && data.user) {
+        const { error: confirmError } = await admin.auth.admin.updateUserById(data.user.id, { email_confirm: true });
+        if (confirmError) logServerError("register-confirm", confirmError);
+      }
+      const { error: signInError } = await supabase.auth.signInWithPassword({
+        email: parsed.data.email,
+        password: parsed.data.password,
+      });
+      if (signInError) return { ok: false, error: friendlyError(signInError) };
     }
   } catch (error) {
     if (isNextRedirect(error)) throw error;

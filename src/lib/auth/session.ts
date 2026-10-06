@@ -1,5 +1,5 @@
 import "server-only";
-import { AppError } from "@/lib/errors";
+import { AppError, logServerError } from "@/lib/errors";
 import { mapProfile } from "@/lib/mappers";
 import { createClient } from "@/lib/supabase/server";
 import type { Profile } from "@/types/user";
@@ -12,17 +12,22 @@ export async function getUserId(): Promise<string | null> {
 }
 
 export async function getCurrentProfile(): Promise<Profile | null> {
-  const supabase = await createClient();
-  const { data: claims, error } = await supabase.auth.getClaims();
-  if (error || !claims?.claims.sub) return null;
+  try {
+    const supabase = await createClient();
+    const { data: claims, error } = await supabase.auth.getClaims();
+    if (error || !claims?.claims.sub) return null;
 
-  const { data } = await supabase
-    .from("profiles")
-    .select("id, username, display_name, avatar_url, bio, storage_limit_bytes, created_at, updated_at")
-    .eq("id", claims.claims.sub)
-    .maybeSingle();
+    const { data } = await supabase
+      .from("profiles")
+      .select("id, username, display_name, avatar_url, bio, storage_limit_bytes, created_at, updated_at")
+      .eq("id", claims.claims.sub)
+      .maybeSingle();
 
-  return mapProfile(data);
+    return mapProfile(data);
+  } catch (error) {
+    logServerError("session", error);
+    return null;
+  }
 }
 
 export async function requireProfile(): Promise<Profile> {

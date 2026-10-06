@@ -10,14 +10,15 @@ import type { Profile } from "@/types/user";
 
 export function SiteHeader({ profile }: { profile: Profile | null }) {
   const pathname = usePathname();
-  const [open, setOpen] = useState(false);
+  const [openPath, setOpenPath] = useState<string | null>(null);
+  const open = openPath === pathname;
 
   return (
     <header className="site-header">
       <div className="shell topbar">
-        <Link href={profile ? "/dashboard" : "/"} className="brand" onClick={() => setOpen(false)}>
+        <Link href={profile ? "/dashboard" : "/"} className="brand" onClick={() => setOpenPath(null)}>
           <span className="brand-mark" aria-hidden="true">R</span>
-          Personal Repository
+          <span className="brand-label">Personal Repository</span>
         </Link>
         <nav className="nav-links" aria-label="Primary">
           {profile ? dashboardNav.map((item) => (
@@ -36,7 +37,7 @@ export function SiteHeader({ profile }: { profile: Profile | null }) {
             className="icon-btn nav-toggle"
             aria-label={open ? "Close menu" : "Open menu"}
             aria-expanded={open}
-            onClick={() => setOpen((value) => !value)}
+            onClick={() => setOpenPath(open ? null : pathname)}
           >
             {open ? <X size={16} aria-hidden="true" /> : <Menu size={16} aria-hidden="true" />}
           </button>
@@ -60,7 +61,7 @@ export function SiteHeader({ profile }: { profile: Profile | null }) {
                 key={item.href}
                 href={item.href}
                 aria-current={isNavActive(pathname, item) ? "page" : undefined}
-                onClick={() => setOpen(false)}
+                onClick={() => setOpenPath(null)}
               >
                 <Icon size={16} aria-hidden="true" />
                 <span>
@@ -71,9 +72,9 @@ export function SiteHeader({ profile }: { profile: Profile | null }) {
             );
           }) : (
             <>
-              <Link href="/public-repositories" onClick={() => setOpen(false)}>Public repositories</Link>
-              <Link href="/login" onClick={() => setOpen(false)}>Log in</Link>
-              <Link href="/register" onClick={() => setOpen(false)}>Create account</Link>
+              <Link href="/public-repositories" onClick={() => setOpenPath(null)}>Public repositories</Link>
+              <Link href="/login" onClick={() => setOpenPath(null)}>Log in</Link>
+              <Link href="/register" onClick={() => setOpenPath(null)}>Create account</Link>
             </>
           )}
         </nav>

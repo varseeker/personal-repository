@@ -41,7 +41,7 @@ export function TextEditor({
         {markdown ? <button type="button" className="btn" onClick={() => setMode("preview")}>Preview</button> : null}
         <button type="button" className="btn" onClick={() => setMode("edit")}>Edit</button>
         <button type="button" className="btn" onClick={() => setMode("raw")}>Raw</button>
-        {mode === "edit" ? <button type="button" className="btn btn-primary" disabled={pending} onClick={() => void save()}>Save</button> : null}
+        {mode === "edit" ? <button type="button" className="btn btn-primary" disabled={pending} aria-busy={pending || undefined} onClick={() => void save()}>{pending ? "Saving…" : "Save"}</button> : null}
       </div>
       {mode === "preview" && markdown ? <MarkdownView markdown={content} /> : null}
       {mode === "edit" ? (

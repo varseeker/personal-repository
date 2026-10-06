@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import {
   Archive,
   Download,
@@ -34,6 +34,8 @@ import {
   prepareUploadAction,
   renameFileAction,
 } from "@/actions/file.actions";
+import { Modal } from "@/components/ui/modal";
+import { SubmitButton } from "@/components/ui/submit-button";
 import { useToast } from "@/components/ui/toast";
 import { compressionSavingsRatio, shouldCompress } from "@/lib/compression/should-compress";
 import { createClient } from "@/lib/supabase/client";
@@ -486,34 +488,34 @@ export function FileBrowser({
       )}
 
       {dialog ? (
-        <dialog open>
+        <Modal onClose={() => { if (!busy) setDialog(null); }}>
           <form action={dialog === "folder" ? submitFolder : submitFile}>
             <h2>{dialog === "folder" ? "New folder" : "New file"}</h2>
             <label className="field">Name<input className="input" name="name" required autoFocus /></label>
             {dialog === "file" ? <label className="field">Content<textarea className="textarea" name="content" /></label> : null}
             <div className="inline-actions" style={{ marginTop: "0.8rem" }}>
               <button className="btn" type="button" onClick={() => setDialog(null)}>Cancel</button>
-              <button className="btn btn-primary" disabled={busy} type="submit">Create</button>
+              <SubmitButton className="btn btn-primary" disabled={busy} pendingLabel="Creating…">Create</SubmitButton>
             </div>
           </form>
-        </dialog>
+        </Modal>
       ) : null}
 
       {mode === "rename" && target ? (
-        <dialog open>
+        <Modal onClose={() => { if (!busy) setMode(null); }}>
           <form action={submitRename}>
             <h2>Rename {target.name}</h2>
             <label className="field">Name<input className="input" name="name" defaultValue={target.name} required /></label>
             <div className="inline-actions" style={{ marginTop: "0.8rem" }}>
               <button className="btn" type="button" onClick={() => setMode(null)}>Cancel</button>
-              <button className="btn btn-primary" disabled={busy}>Save</button>
+              <SubmitButton className="btn btn-primary" disabled={busy} pendingLabel="Saving…">Save</SubmitButton>
             </div>
           </form>
-        </dialog>
+        </Modal>
       ) : null}
 
       {mode === "move" && target ? (
-        <dialog open>
+        <Modal onClose={() => { if (!busy) setMode(null); }}>
           <form action={submitMove}>
             <h2>Move {target.name}</h2>
             <label className="field">Destination
@@ -525,25 +527,25 @@ export function FileBrowser({
             </label>
             <div className="inline-actions" style={{ marginTop: "0.8rem" }}>
               <button className="btn" type="button" onClick={() => setMode(null)}>Cancel</button>
-              <button className="btn btn-primary" disabled={busy}>Move</button>
+              <SubmitButton className="btn btn-primary" disabled={busy} pendingLabel="Moving…">Move</SubmitButton>
             </div>
           </form>
-        </dialog>
+        </Modal>
       ) : null}
 
       {mode === "delete" && target ? (
-        <dialog open>
+        <Modal onClose={() => { if (!busy) setMode(null); }}>
           <h2>Delete “{target.name}”?</h2>
           <p>This action cannot be undone.</p>
           <div className="inline-actions">
             <button className="btn" type="button" onClick={() => setMode(null)}>Cancel</button>
-            <button className="btn btn-danger" type="button" disabled={busy} onClick={() => void confirmDelete()}>Delete</button>
+            <button className="btn btn-danger" type="button" disabled={busy} aria-busy={busy || undefined} onClick={() => void confirmDelete()}>{busy ? "Deleting…" : "Delete"}</button>
           </div>
-        </dialog>
+        </Modal>
       ) : null}
 
       {duplicate ? (
-        <dialog open>
+        <Modal onClose={() => duplicate.choose("cancel")}>
           <h2>File already exists.</h2>
           <p>“{duplicate.name}” is already in this folder.</p>
           <div className="inline-actions">
@@ -551,7 +553,7 @@ export function FileBrowser({
             <button className="btn" type="button" onClick={() => duplicate.choose("keep")}>Keep both</button>
             <button className="btn btn-primary" type="button" onClick={() => duplicate.choose("replace")}>Replace</button>
           </div>
-        </dialog>
+        </Modal>
       ) : null}
     </section>
   );
@@ -577,20 +579,43 @@ function RowMenu({
   onCopy: () => void;
 }) {
   const [open, setOpen] = useState(false);
+  const menuRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (!open) return;
+    function onPointer(event: MouseEvent) {
+      if (!menuRef.current?.contains(event.target as Node)) setOpen(false);
+    }
+    function onKey(event: KeyboardEvent) {
+      if (event.key === "Escape") setOpen(false);
+    }
+    document.addEventListener("mousedown", onPointer);
+    document.addEventListener("keydown", onKey);
+    return () => {
+      document.removeEventListener("mousedown", onPointer);
+      document.removeEventListener("keydown", onKey);
+    };
+  }, [open]);
+
+  function choose(action: () => void) {
+    setOpen(false);
+    action();
+  }
+
   return (
-    <div className="menu">
-      <button type="button" className="icon-btn" aria-label="Item actions" aria-expanded={open} onClick={() => setOpen((value) => !value)}>
+    <div className="menu" ref={menuRef}>
+      <button type="button" className="icon-btn" aria-label="Item actions" aria-expanded={open} aria-haspopup="menu" onClick={() => setOpen((value) => !value)}>
         <Ellipsis size={16} aria-hidden="true" />
       </button>
       {open ? (
         <div className="menu-panel card" role="menu">
-          <button type="button" onClick={onOpen}>Open</button>
-          {previewHref ? <Link href={previewHref}><span style={{ display: "inline-flex", gap: "0.35rem", alignItems: "center" }}>Preview</span></Link> : null}
-          <a href={downloadHref}><Download size={14} aria-hidden="true" /> Download</a>
-          <button type="button" onClick={onCopy}><Link2 size={14} aria-hidden="true" /> Copy link</button>
-          {canWrite ? <button type="button" onClick={onRename}>Rename</button> : null}
-          {canWrite ? <button type="button" onClick={onMove}>Move</button> : null}
-          {canWrite ? <button type="button" onClick={onDelete}>Delete</button> : null}
+          <button type="button" role="menuitem" onClick={() => choose(onOpen)}>Open</button>
+          {previewHref ? <Link role="menuitem" href={previewHref} onClick={() => setOpen(false)}>Preview</Link> : null}
+          <a role="menuitem" href={downloadHref}><Download size={14} aria-hidden="true" /> Download</a>
+          <button type="button" role="menuitem" onClick={() => choose(onCopy)}><Link2 size={14} aria-hidden="true" /> Copy link</button>
+          {canWrite ? <button type="button" role="menuitem" onClick={() => choose(onRename)}>Rename</button> : null}
+          {canWrite ? <button type="button" role="menuitem" onClick={() => choose(onMove)}>Move</button> : null}
+          {canWrite ? <button type="button" role="menuitem" onClick={() => choose(onDelete)}>Delete</button> : null}
         </div>
       ) : null}
     </div>
