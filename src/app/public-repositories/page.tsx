@@ -73,7 +73,10 @@ export default async function PublicRepositoriesPage({
               {sorts.map((item) => <option key={item.id} value={item.id}>{item.label}</option>)}
             </select>
           </label>
-          <SubmitButton className="btn btn-primary" pendingLabel="Searching…">Search</SubmitButton>
+          <div className="field catalog-submit">
+            <span aria-hidden="true">Search</span>
+            <SubmitButton className="btn btn-primary" pendingLabel="Searching…">Search</SubmitButton>
+          </div>
         </form>
         <p className="muted catalog-meta">{result.total} {result.total === 1 ? "repository" : "repositories"}</p>
         {result.items.length === 0 ? <p className="empty-note">No public repositories found.</p> : (

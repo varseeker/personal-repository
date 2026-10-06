@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { createRepositoryAction, deleteRepositoryAction, setVisibilityAction, updateRepositoryAction } from "@/actions/repository.actions";
+import { isNextRedirect } from "@/lib/errors";
 import { Modal } from "@/components/ui/modal";
 import { SubmitButton } from "@/components/ui/submit-button";
 import { useToast } from "@/components/ui/toast";
@@ -13,13 +14,18 @@ export function CreateRepositoryForm() {
   const [state, setState] = useState<string | null>(null);
 
   return (
-    <>
+    <div className="create-repo">
       <button className="btn btn-primary" type="button" onClick={() => setOpen(true)}>Create repository</button>
       {open ? (
         <Modal onClose={() => setOpen(false)}>
           <form action={async (formData) => {
-            const result = await createRepositoryAction(null, formData);
-            if (result && !result.ok) setState(result.error);
+            try {
+              const result = await createRepositoryAction(null, formData);
+              if (result && !result.ok) setState(result.error);
+            } catch (error) {
+              if (isNextRedirect(error)) throw error;
+              setState("Unable to create the repository.");
+            }
           }}>
             <h2>Create repository</h2>
             <p className="muted">New repositories are private until you explicitly make them public.</p>
@@ -33,7 +39,7 @@ export function CreateRepositoryForm() {
           </form>
         </Modal>
       ) : null}
-    </>
+    </div>
   );
 }
 

@@ -14,25 +14,32 @@ export function Modal({ onClose, children }: { onClose: () => void; children: Re
     const dialog = ref.current;
     if (!dialog) return;
     let ignoreClose = false;
+    let acceptBackdrop = false;
     if (!dialog.open) dialog.showModal();
+    const armBackdrop = () => { acceptBackdrop = true; };
+    const armTimer = window.setTimeout(armBackdrop, 250);
+    window.addEventListener("pointerup", armBackdrop, { once: true });
     function handleClose() {
       if (!ignoreClose) onCloseRef.current();
     }
+    function handleClick(event: MouseEvent) {
+      if (!acceptBackdrop) return;
+      if (event.target === dialog) onCloseRef.current();
+    }
     dialog.addEventListener("close", handleClose);
+    dialog.addEventListener("click", handleClick);
     return () => {
       ignoreClose = true;
+      window.clearTimeout(armTimer);
+      window.removeEventListener("pointerup", armBackdrop);
       dialog.removeEventListener("close", handleClose);
+      dialog.removeEventListener("click", handleClick);
       if (dialog.open) dialog.close();
     };
   }, []);
 
   return (
-    <dialog
-      ref={ref}
-      onClick={(event) => {
-        if (event.target === event.currentTarget) onCloseRef.current();
-      }}
-    >
+    <dialog ref={ref}>
       {children}
     </dialog>
   );
