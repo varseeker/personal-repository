@@ -1,46 +1,55 @@
 "use client";
 
 import { useEffect, useRef } from "react";
+import { createPortal } from "react-dom";
 
 export function Modal({ onClose, children }: { onClose: () => void; children: React.ReactNode }) {
-  const ref = useRef<HTMLDialogElement>(null);
   const onCloseRef = useRef(onClose);
+  const panelRef = useRef<HTMLDivElement>(null);
+  const readyRef = useRef(false);
 
   useEffect(() => {
     onCloseRef.current = onClose;
   }, [onClose]);
 
   useEffect(() => {
-    const dialog = ref.current;
-    if (!dialog) return;
-    let ignoreClose = false;
-    let acceptBackdrop = false;
-    if (!dialog.open) dialog.showModal();
-    const armBackdrop = () => { acceptBackdrop = true; };
-    const armTimer = window.setTimeout(armBackdrop, 250);
-    window.addEventListener("pointerup", armBackdrop, { once: true });
-    function handleClose() {
-      if (!ignoreClose) onCloseRef.current();
+    const previouslyFocused = document.activeElement instanceof HTMLElement ? document.activeElement : null;
+    const previousOverflow = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    panelRef.current?.querySelector<HTMLElement>("input, textarea, select")?.focus();
+
+    const armFrame = window.requestAnimationFrame(() => {
+      readyRef.current = true;
+    });
+
+    function onKey(event: KeyboardEvent) {
+      if (event.key !== "Escape") return;
+      event.preventDefault();
+      onCloseRef.current();
     }
-    function handleClick(event: MouseEvent) {
-      if (!acceptBackdrop) return;
-      if (event.target === dialog) onCloseRef.current();
-    }
-    dialog.addEventListener("close", handleClose);
-    dialog.addEventListener("click", handleClick);
+
+    document.addEventListener("keydown", onKey);
     return () => {
-      ignoreClose = true;
-      window.clearTimeout(armTimer);
-      window.removeEventListener("pointerup", armBackdrop);
-      dialog.removeEventListener("close", handleClose);
-      dialog.removeEventListener("click", handleClick);
-      if (dialog.open) dialog.close();
+      readyRef.current = false;
+      window.cancelAnimationFrame(armFrame);
+      document.removeEventListener("keydown", onKey);
+      document.body.style.overflow = previousOverflow;
+      previouslyFocused?.focus();
     };
   }, []);
 
-  return (
-    <dialog ref={ref}>
-      {children}
-    </dialog>
+  return createPortal(
+    <div
+      className="modal-backdrop"
+      onMouseDown={(event) => {
+        if (!readyRef.current || event.target !== event.currentTarget) return;
+        onCloseRef.current();
+      }}
+    >
+      <div className="modal-panel" role="dialog" aria-modal="true" ref={panelRef} onMouseDown={(event) => event.stopPropagation()}>
+        {children}
+      </div>
+    </div>,
+    document.body,
   );
 }

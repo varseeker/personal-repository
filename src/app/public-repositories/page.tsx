@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { Search } from "lucide-react";
 import { SiteHeader } from "@/components/layout/site-header";
 import { SubmitButton } from "@/components/ui/submit-button";
 import { PublicRepositoryCardView } from "@/components/repository/repository-card";
@@ -65,17 +66,25 @@ export default async function PublicRepositoriesPage({
         <form className="card catalog-toolbar" action="/public-repositories">
           <label className="field">
             <span>Search</span>
-            <input className="input" name="q" defaultValue={query} placeholder="Name, description, or username" />
+            <span className="control">
+              <Search className="control-icon control-icon-start" size={16} aria-hidden="true" />
+              <input className="input" name="q" defaultValue={query} placeholder="Name, description, or username" />
+            </span>
           </label>
           <label className="field">
             <span>Sort</span>
-            <select className="select" name="sort" defaultValue={sort}>
-              {sorts.map((item) => <option key={item.id} value={item.id}>{item.label}</option>)}
-            </select>
+            <span className="select-shell">
+              <select className="select" name="sort" defaultValue={sort}>
+                {sorts.map((item) => <option key={item.id} value={item.id}>{item.label}</option>)}
+              </select>
+            </span>
           </label>
           <div className="field catalog-submit">
             <span aria-hidden="true">Search</span>
-            <SubmitButton className="btn btn-primary" pendingLabel="Searching…">Search</SubmitButton>
+            <SubmitButton className="btn btn-primary" pendingLabel="Searching…">
+              <Search size={16} aria-hidden="true" />
+              Search
+            </SubmitButton>
           </div>
         </form>
         <p className="muted catalog-meta">{result.total} {result.total === 1 ? "repository" : "repositories"}</p>

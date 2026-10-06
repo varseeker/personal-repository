@@ -32,7 +32,7 @@ export function CreateRepositoryForm() {
             <label className="field"><span>Name</span><input className="input" name="name" required /></label>
             <label className="field"><span>Description</span><textarea className="textarea" name="description" /></label>
             {state ? <p className="form-error">{state}</p> : null}
-            <div className="inline-actions" style={{ marginTop: "0.8rem" }}>
+            <div className="inline-actions">
               <button className="btn" type="button" onClick={() => setOpen(false)}>Cancel</button>
               <SubmitButton className="btn btn-primary" pendingLabel="Creating…">Create</SubmitButton>
             </div>
