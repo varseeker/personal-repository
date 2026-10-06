@@ -1,69 +1,90 @@
-import Image from "next/image";
+import Link from "next/link";
+import { SiteHeader } from "@/components/layout/site-header";
+import { PublicRepositoryCardView } from "@/components/repository/repository-card";
+import { getCurrentProfile } from "@/lib/auth/session";
+import { supabaseBrowserEnv } from "@/lib/supabase/env";
+import { createClient } from "@/lib/supabase/server";
+import { RepositoryService } from "@/services/repository.service";
 
-export default function Home() {
+export const dynamic = "force-dynamic";
+
+const features = [
+  ["Personal repositories", "Keep documents, projects, and backups in separate repositories."],
+  ["Private or public", "Repositories stay private until you explicitly publish them."],
+  ["Folders", "Nest folders the same way you would on your computer."],
+  ["Upload and download", "Store common documents, media, archives, and source files."],
+  ["Markdown", "Read README files and Markdown notes in the repository."],
+  ["Previews", "Open images, PDF, text, and source files without downloading first."],
+  ["Storage optimization", "Text and source files are gzip-compressed only when that saves space."],
+  ["Signed-in ownership", "Row level security keeps private repositories with their owner."],
+  ["Shareable links", "Public repositories have a stable username and slug URL."],
+];
+
+export default async function HomePage() {
+  const configured = Boolean(supabaseBrowserEnv());
+  const profile = configured ? await getCurrentProfile() : null;
+  const preview = configured
+    ? await RepositoryService.searchPublic(await createClient(), { query: "", sort: "updated", limit: 4, offset: 0 }).catch(() => ({ items: [], total: 0 }))
+    : { items: [], total: 0 };
+
   return (
-    <div className="flex flex-col flex-1 items-center justify-center bg-zinc-50 font-sans dark:bg-black">
-      <main className="flex flex-1 w-full max-w-3xl flex-col items-center justify-between py-32 px-16 bg-white dark:bg-black sm:items-start">
-        <Image
-          className="dark:invert h-5 w-[100px]"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={100}
-          height={20}
-          priority
-        />
-        <div className="flex flex-col items-center gap-6 text-center sm:items-start sm:text-left">
-          <h1 className="max-w-xs text-3xl font-semibold leading-10 tracking-tight text-black dark:text-zinc-50">
-            To get started, edit the{" "}
-            <code className="rounded bg-black/[.06] px-1.5 py-0.5 font-mono text-[0.9em] dark:bg-white/[.08]">
-              page.tsx
-            </code>{" "}
-            file.
-          </h1>
-          <p className="max-w-md text-lg leading-8 text-zinc-600 dark:text-zinc-400">
-            Looking for a starting point or more instructions? Head over to{" "}
-            <a
-              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Templates
-            </a>{" "}
-            or the{" "}
-            <a
-              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Learning
-            </a>{" "}
-            center.
-          </p>
-        </div>
-        <div className="flex flex-col gap-4 text-base font-medium sm:flex-row">
-          <a
-            className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-foreground px-5 text-background transition-colors hover:bg-[#383838] dark:hover:bg-[#ccc] md:w-[158px]"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert h-[14px] w-4"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={16}
-              height={14}
-            />
-            Deploy Now
-          </a>
-          <a
-            className="flex h-12 w-full items-center justify-center rounded-full border border-solid border-black/[.08] px-5 transition-colors hover:border-transparent hover:bg-black/[.04] dark:border-white/[.145] dark:hover:bg-[#1a1a1a] md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Documentation
-          </a>
-        </div>
+    <>
+      <SiteHeader profile={profile} />
+      <main className="shell">
+        <section className="hero">
+          <div>
+            <p className="badge">Cloud storage for people who think in repositories</p>
+            <h1>Your files. Your repositories. Your control.</h1>
+            <p className="lede">A personal cloud repository for storing, organizing, and sharing files. Private by default, public when you say so.</p>
+            <div className="hero-actions">
+              <Link className="btn btn-primary" href={profile ? "/dashboard" : "/register"}>Get started</Link>
+              <Link className="btn" href="/public-repositories">Explore public repositories</Link>
+            </div>
+          </div>
+          <aside className="card" style={{ padding: "1.1rem" }} aria-hidden="true">
+            <p className="muted">My Repository</p>
+            <pre style={{ margin: 0, lineHeight: 1.7 }}>{`README.md
+src/
+  components/
+  hooks/
+docs/
+assets/`}</pre>
+          </aside>
+        </section>
+        <section className="feature-grid">
+          {features.map(([title, copy]) => (
+            <article className="card" key={title}>
+              <h2 style={{ marginTop: 0, fontSize: "1.05rem" }}>{title}</h2>
+              <p className="muted">{copy}</p>
+            </article>
+          ))}
+        </section>
+        <section>
+          <h2>How it works</h2>
+          <div className="steps">
+            <span>Create repository</span>
+            <span>Upload files</span>
+            <span>Organize</span>
+            <span>Choose private or public</span>
+            <span>Share</span>
+          </div>
+        </section>
+        <section>
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline" }}>
+            <h2>Public repositories</h2>
+            <Link className="text-link" href="/public-repositories">View all</Link>
+          </div>
+          {preview.items.length === 0 ? <p className="muted">No public repositories yet.</p> : (
+            <div className="repo-grid">
+              {preview.items.map((item) => <PublicRepositoryCardView key={item.id} item={item} />)}
+            </div>
+          )}
+        </section>
+        <section className="card" style={{ padding: "1.4rem", margin: "2rem 0 3rem" }}>
+          <h2 style={{ marginTop: 0 }}>Start building your repository today.</h2>
+          <Link className="btn btn-primary" href="/register">Create account</Link>
+        </section>
       </main>
-    </div>
+    </>
   );
 }
