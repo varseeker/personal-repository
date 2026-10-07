@@ -5,7 +5,7 @@ import { getUserId } from "@/lib/auth/session";
 import { contentDisposition } from "@/lib/http/content-disposition";
 import { clientIp, rateLimit } from "@/lib/security/rate-limit";
 import { createClient } from "@/lib/supabase/server";
-import { fileKind, isInlinePreview } from "@/lib/utils/file-kind";
+import { fileKind, isInlinePreview, previewContentType } from "@/lib/utils/file-kind";
 import { ActivityService } from "@/services/activity.service";
 import { FileService } from "@/services/file.service";
 import { StorageService } from "@/services/storage.service";
@@ -46,7 +46,7 @@ export async function GET(request: Request, context: { params: Promise<{ fileId:
 
   return new Response(Readable.toWeb(body) as ReadableStream, {
     headers: {
-      "Content-Type": file.mime_type || "application/octet-stream",
+      "Content-Type": previewContentType(file.mime_type, file.extension),
       "Content-Disposition": contentDisposition(disposition, file.name),
       "Cache-Control": "private, no-store",
       "X-Content-Type-Options": "nosniff",
