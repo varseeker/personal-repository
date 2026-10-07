@@ -3,13 +3,13 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { createRepositoryAction, deleteRepositoryAction, setVisibilityAction, updateRepositoryAction } from "@/actions/repository.actions";
-import { isNextRedirect } from "@/lib/errors";
 import { Modal } from "@/components/ui/modal";
 import { SubmitButton } from "@/components/ui/submit-button";
 import { useToast } from "@/components/ui/toast";
 import type { Repository } from "@/types/repository";
 
 export function CreateRepositoryForm() {
+  const router = useRouter();
   const [open, setOpen] = useState(false);
   const [state, setState] = useState<string | null>(null);
 
@@ -21,9 +21,13 @@ export function CreateRepositoryForm() {
           <form action={async (formData) => {
             try {
               const result = await createRepositoryAction(null, formData);
-              if (result && !result.ok) setState(result.error);
-            } catch (error) {
-              if (isNextRedirect(error)) throw error;
+              if (!result.ok) {
+                setState(result.error);
+                return;
+              }
+              router.push(result.data?.href ?? "/dashboard");
+              router.refresh();
+            } catch {
               setState("Unable to create the repository.");
             }
           }}>

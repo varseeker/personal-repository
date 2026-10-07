@@ -55,20 +55,18 @@ export const RepositoryService = {
     const existing = await this.listMine(supabase, ownerId);
     const slug = uniqueSlug(base, new Set(existing.map((repository) => repository.slug)));
 
-    const { data, error } = await supabase
-      .from("repositories")
-      .insert({
-        owner_id: ownerId,
-        name: input.name.trim(),
-        slug,
-        description: input.description.trim() || null,
-        visibility: "private",
-      })
-      .select(REPOSITORY_COLUMNS)
-      .single();
+    const { error } = await supabase.from("repositories").insert({
+      owner_id: ownerId,
+      name: input.name.trim(),
+      slug,
+      description: input.description.trim() || null,
+      visibility: "private",
+    });
 
-    if (error || !data) throw error ?? new AppError("Unable to create the repository.");
-    const repository = mapRepository(data);
+    // Do not chain .select() here. RETURNING checks can_read_repo() before the
+    // new row is visible, and Postgres reports that as an RLS violation.
+    if (error) throw error;
+    const repository = await this.getBySlug(supabase, ownerId, slug);
     if (!repository) throw new AppError("Unable to create the repository.");
     return repository;
   },

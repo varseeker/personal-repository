@@ -20,7 +20,7 @@ export function isNextRedirect(error: unknown): boolean {
 export function logServerError(scope: string, error: unknown): void {
   const details = error as ErrorLike;
   const code = details?.code ? ` ${details.code}` : "";
-  const message = error instanceof Error ? error.message : "Unknown error";
+  const message = error instanceof Error ? error.message : details?.message ?? "Unknown error";
   console.error(`[${scope}]${code} ${message}`);
 }
 

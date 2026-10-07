@@ -16,7 +16,10 @@ const repositorySchema = z.object({
   description: z.string().trim().max(2000),
 });
 
-export async function createRepositoryAction(_state: ActionResult | null, formData: FormData): Promise<ActionResult> {
+export async function createRepositoryAction(
+  _state: ActionResult | null,
+  formData: FormData,
+): Promise<ActionResult<{ href: string }>> {
   const parsed = repositorySchema.safeParse({
     name: formData.get("name"),
     description: formData.get("description") ?? "",
@@ -33,7 +36,7 @@ export async function createRepositoryAction(_state: ActionResult | null, formDa
     const supabase = await createClient();
     const repository = await RepositoryService.create(supabase, profile.id, parsed.data);
     await revalidateRepository(supabase, repository);
-    redirect(`/u/${profile.username}/${repository.slug}`);
+    return { ok: true, data: { href: `/u/${profile.username}/${repository.slug}` } };
   } catch (error) {
     if (isNextRedirect(error)) throw error;
     logServerError("create-repository", error);
