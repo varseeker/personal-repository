@@ -358,6 +358,19 @@ button.file-name {
 .preview-table { border-collapse: collapse; width: 100%; }
 .preview-table th, .preview-table td { border: 1px solid var(--line); padding: 0.4rem 0.55rem; text-align: left; white-space: nowrap; }
 .preview-table th { background: var(--surface-2); }
+.file-preview img {
+  display: block;
+  max-width: min(100%, 42rem);
+  background:
+    linear-gradient(45deg, var(--surface-2) 25%, transparent 25%),
+    linear-gradient(-45deg, var(--surface-2) 25%, transparent 25%),
+    linear-gradient(45deg, transparent 75%, var(--surface-2) 75%),
+    linear-gradient(-45deg, transparent 75%, var(--surface-2) 75%);
+  background-size: 1.2rem 1.2rem;
+  background-position: 0 0, 0 0.6rem, 0.6rem -0.6rem, -0.6rem 0;
+  border: 1px solid var(--line);
+  border-radius: 0.6rem;
+}
 .file-preview .code-fallback { margin: 0; max-height: 32rem; background: var(--surface-2); }
 .menu-panel button:hover, .menu-panel a:hover { background: var(--surface-2); }
 
