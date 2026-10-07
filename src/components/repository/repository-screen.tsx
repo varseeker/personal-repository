@@ -8,16 +8,16 @@ export function RepositoryScreen({ view }: { view: Extract<RepositoryView, { mis
   const { repository, owner } = view;
   return (
     <div className="shell page-canvas" style={{ paddingBottom: "3rem" }}>
-      <header style={{ padding: "1.4rem 0 1rem" }}>
-        <p className="muted" style={{ marginBottom: "0.3rem" }}>
+      <header className="repo-header">
+        <p className="muted repo-crumb">
           <Link href={`/u/${owner.username}/${repository.slug}`}>{owner.username}</Link> / {repository.name}
         </p>
-        <div style={{ display: "flex", justifyContent: "space-between", gap: "1rem", flexWrap: "wrap" }}>
-          <div>
-            <h1 style={{ margin: "0 0 0.4rem" }}>{repository.name}</h1>
+        <div className="repo-header-row">
+          <div className="repo-heading">
+            <h1>{repository.name}</h1>
             <p className="muted">{repository.description || "No description yet."}</p>
           </div>
-          <div className="inline-actions repo-actions">
+          <div className="repo-actions">
             <span className={repository.visibility === "public" ? "badge badge-public" : "badge"}>
               {repository.visibility === "public" ? "Public" : "Private"}
             </span>

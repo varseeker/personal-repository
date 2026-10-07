@@ -166,8 +166,32 @@ button, input, textarea, select { font: inherit; color: inherit; }
 .input:focus, .textarea:focus, .select:focus { outline: none; border-color: color-mix(in srgb, var(--accent) 65%, var(--line)); box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent) 18%, transparent); }
 .textarea { min-height: 7rem; resize: vertical; }
 .form-error { color: var(--danger); margin: 0; }
-.badge { border: 1px solid var(--line); border-radius: 999px; padding: 0.15rem 0.55rem; font-size: 0.78rem; color: var(--muted); }
+.badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: none;
+  height: 1.85rem;
+  padding: 0 0.75rem;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  font-size: 0.78rem;
+  font-weight: 640;
+  line-height: 1;
+  letter-spacing: 0.01em;
+  color: var(--muted);
+  white-space: nowrap;
+}
 .badge-public { color: var(--ok); border-color: color-mix(in srgb, var(--ok) 40%, var(--line)); }
+.repo-header { padding: 1.4rem 0 1rem; }
+.repo-crumb { margin: 0 0 0.55rem; }
+.repo-header-row { display: flex; justify-content: space-between; align-items: center; gap: 1rem 1.25rem; flex-wrap: wrap; }
+.repo-heading { min-width: 0; flex: 1 1 16rem; }
+.repo-heading h1, .repo-heading p { margin: 0; }
+.repo-heading p { margin-top: 0.4rem; }
+.repo-actions { display: flex; align-items: center; flex-wrap: wrap; gap: 0.7rem; }
+.repo-actions .badge, .repo-actions .btn { height: 2.5rem; }
+.repo-actions .btn { padding-top: 0; padding-bottom: 0; white-space: nowrap; }
 
 .hero { display: grid; grid-template-columns: 1.1fr 0.9fr; gap: 2.5rem; align-items: center; padding: 3.5rem 0 2rem; }
 .hero h1 { font-size: clamp(2.6rem, 6vw, 5rem); line-height: 0.95; letter-spacing: -0.055em; margin: 0 0 1rem; }
@@ -314,8 +338,6 @@ button, input, textarea, select { font: inherit; color: inherit; }
 .upload-queue { padding: 0 1rem 1rem; display: grid; gap: 0.55rem; }
 .file-name { display: flex; align-items: center; gap: 0.65rem; min-width: 0; }
 .file-name strong { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-weight: 600; }
-.repo-actions { align-items: center; }
-.repo-actions .btn { white-space: nowrap; }
 button.file-name {
   background: none;
   border: 0;
@@ -464,6 +486,9 @@ button.file-name {
   .hero h1 { font-size: 2.15rem; }
   .lede { font-size: 1rem; margin-bottom: 1.25rem; }
   .hero-actions .btn, .cta-band .btn, .page-head > .btn, .page-head .create-repo, .page-head .create-repo > .btn { width: 100%; }
+  .repo-header-row { align-items: stretch; }
+  .repo-actions { width: 100%; }
+  .repo-actions .btn { flex: 1 1 8rem; }
   .page-head { align-items: stretch; }
   .catalog { padding: 1.75rem 0 2.5rem; }
   .auth-panel { padding-top: 1.75rem; }
