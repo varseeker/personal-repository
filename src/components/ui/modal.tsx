@@ -3,7 +3,7 @@
 import { useEffect, useRef } from "react";
 import { createPortal } from "react-dom";
 
-export function Modal({ onClose, children }: { onClose: () => void; children: React.ReactNode }) {
+export function Modal({ onClose, children, className }: { onClose: () => void; children: React.ReactNode; className?: string }) {
   const onCloseRef = useRef(onClose);
   const panelRef = useRef<HTMLDivElement>(null);
   const readyRef = useRef(false);
@@ -46,7 +46,7 @@ export function Modal({ onClose, children }: { onClose: () => void; children: Re
         onCloseRef.current();
       }}
     >
-      <div className="modal-panel" role="dialog" aria-modal="true" ref={panelRef} onMouseDown={(event) => event.stopPropagation()}>
+      <div className={className ? `modal-panel ${className}` : "modal-panel"} role="dialog" aria-modal="true" ref={panelRef} onMouseDown={(event) => event.stopPropagation()}>
         {children}
       </div>
     </div>,

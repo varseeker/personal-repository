@@ -114,10 +114,56 @@ async function inflateRaw(bytes: Uint8Array): Promise<Uint8Array> {
   return new Uint8Array(await new Response(stream).arrayBuffer());
 }
 
+function zipView(data: Uint8Array): DataView {
+  return new DataView(data.buffer, data.byteOffset, data.byteLength);
+}
+
+function findZipCentralDirectory(data: Uint8Array): { offset: number; count: number } | null {
+  const view = zipView(data);
+  const earliest = Math.max(0, data.length - (22 + 0xffff));
+  for (let offset = data.length - 22; offset >= earliest; offset -= 1) {
+    if (view.getUint32(offset, true) !== 0x06054b50) continue;
+    return { offset: view.getUint32(offset + 16, true), count: view.getUint16(offset + 10, true) };
+  }
+  return null;
+}
+
+async function readCompressed(data: Uint8Array, method: number, start: number, size: number): Promise<Uint8Array | null> {
+  if (size < 0 || start < 0 || start + size > data.length) return null;
+  const compressed = data.subarray(start, start + size);
+  if (method === 0) return compressed;
+  if (method === 8) return inflateRaw(compressed);
+  return null;
+}
+
 async function readZipEntries(data: Uint8Array, names: string[]): Promise<Map<string, Uint8Array>> {
   const wanted = new Set(names);
   const found = new Map<string, Uint8Array>();
-  const view = new DataView(data.buffer, data.byteOffset, data.byteLength);
+  const view = zipView(data);
+  const central = findZipCentralDirectory(data);
+  if (central) {
+    let offset = central.offset;
+    for (let index = 0; index < central.count && offset + 46 <= data.length && found.size < wanted.size; index += 1) {
+      if (view.getUint32(offset, true) !== 0x02014b50) break;
+      const method = view.getUint16(offset + 10, true);
+      const compressedSize = view.getUint32(offset + 20, true);
+      const nameLength = view.getUint16(offset + 28, true);
+      const extraLength = view.getUint16(offset + 30, true);
+      const commentLength = view.getUint16(offset + 32, true);
+      const localOffset = view.getUint32(offset + 42, true);
+      const name = new TextDecoder().decode(data.subarray(offset + 46, offset + 46 + nameLength));
+      if (wanted.has(name) && localOffset + 30 <= data.length && view.getUint32(localOffset, true) === 0x04034b50) {
+        const localNameLength = view.getUint16(localOffset + 26, true);
+        const localExtraLength = view.getUint16(localOffset + 28, true);
+        const dataStart = localOffset + 30 + localNameLength + localExtraLength;
+        const bytes = await readCompressed(data, method, dataStart, compressedSize);
+        if (bytes) found.set(name, bytes);
+      }
+      offset += 46 + nameLength + extraLength + commentLength;
+    }
+    if (found.size > 0) return found;
+  }
+
   let offset = 0;
   while (offset + 30 <= data.length && found.size < wanted.size) {
     if (view.getUint32(offset, true) !== 0x04034b50) break;
@@ -132,9 +178,8 @@ async function readZipEntries(data: Uint8Array, names: string[]): Promise<Map<st
     if (dataStart + compressedSize > data.length) break;
     const name = new TextDecoder().decode(data.subarray(nameStart, nameStart + nameLength));
     if (wanted.has(name)) {
-      const compressed = data.subarray(dataStart, dataStart + compressedSize);
-      if (method === 0) found.set(name, compressed);
-      else if (method === 8) found.set(name, await inflateRaw(compressed));
+      const bytes = await readCompressed(data, method, dataStart, compressedSize);
+      if (bytes) found.set(name, bytes);
     }
     offset = dataStart + compressedSize;
   }

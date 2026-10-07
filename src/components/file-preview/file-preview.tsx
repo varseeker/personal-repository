@@ -12,7 +12,7 @@ import {
   prettyJson,
   sniffMedia,
 } from "@/lib/preview/content";
-import { fileKind, type FileKind } from "@/lib/utils/file-kind";
+import { fileKind, previewContentType, type FileKind } from "@/lib/utils/file-kind";
 
 export type PreviewFile = {
   id: string;
@@ -46,11 +46,12 @@ export function FilePreview({ file }: { file: PreviewFile }) {
   const url = `/api/files/${file.id}?inline=1`;
   const kind = fileKind(file.mimeType, file.extension);
   const immediateMedia = mediaKind(kind);
-  const skipFetch = Boolean(immediateMedia) || file.originalSize === 0 || file.originalSize > appConfig.previewByteCap;
-  const staticPreview: Loaded | null = immediateMedia
-    ? { mode: "media", kind: immediateMedia, src: url }
-    : file.originalSize === 0
-      ? { mode: "empty" }
+  const streamMedia = Boolean(immediateMedia) && file.originalSize > appConfig.previewByteCap;
+  const skipFetch = file.originalSize === 0 || streamMedia || file.originalSize > appConfig.previewByteCap;
+  const staticPreview: Loaded | null = file.originalSize === 0
+    ? { mode: "empty" }
+    : streamMedia && immediateMedia
+      ? { mode: "media", kind: immediateMedia, src: url }
       : file.originalSize > appConfig.previewByteCap
         ? { mode: "too-large" }
         : null;
@@ -72,13 +73,14 @@ export function FilePreview({ file }: { file: PreviewFile }) {
         const bytes = new Uint8Array(await response.arrayBuffer());
         if (controller.signal.aborted) return;
         const sniffed = sniffMedia(bytes);
-        if (sniffed) {
-          objectUrl = URL.createObjectURL(new Blob([bytes], { type: sniffed.mime }));
+        const media = sniffed ?? (immediateMedia ? { kind: immediateMedia, mime: previewContentType(file.mimeType, file.extension) } : null);
+        if (media) {
+          objectUrl = URL.createObjectURL(new Blob([bytes], { type: media.mime }));
           if (controller.signal.aborted) {
             URL.revokeObjectURL(objectUrl);
             return;
           }
-          setFetched({ id: fileId, loaded: { mode: "media", kind: sniffed.kind, src: objectUrl } });
+          setFetched({ id: fileId, loaded: { mode: "media", kind: media.kind, src: objectUrl } });
           return;
         }
         const office = await extractOfficeText(bytes, file.extension ?? "");
@@ -107,7 +109,7 @@ export function FilePreview({ file }: { file: PreviewFile }) {
       controller.abort();
       if (objectUrl) URL.revokeObjectURL(objectUrl);
     };
-  }, [file.extension, file.id, file.mimeType, skipFetch, url]);
+  }, [file.extension, file.id, file.mimeType, immediateMedia, skipFetch, url]);
 
   if (!loaded) return <p className="muted preview-status">Loading preview…</p>;
   if (loaded.mode === "empty") return <p className="muted preview-status">This file is empty.</p>;

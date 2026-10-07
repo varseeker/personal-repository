@@ -125,12 +125,10 @@ export function FileBrowser({
   const [duplicate, setDuplicate] = useState<{ name: string; choose: (choice: DuplicateChoice) => void } | null>(null);
   const [busy, setBusy] = useState(false);
   const [selectedId, setSelectedId] = useState<string | null>(null);
-  const previewRef = useRef<HTMLElement>(null);
   const selected = files.find((item) => item.id === selectedId) ?? null;
 
   function selectFile(fileId: string) {
     setSelectedId(fileId);
-    requestAnimationFrame(() => previewRef.current?.scrollIntoView({ block: "nearest" }));
   }
 
   function refresh() {
@@ -487,7 +485,7 @@ export function FileBrowser({
                 <RowMenu
                   canWrite={canWrite}
                   downloadHref={`/api/files/${file.id}`}
-                  onOpen={() => router.push(href)}
+                  onOpen={() => selectFile(file.id)}
                   onPreview={() => selectFile(file.id)}
                   onRename={() => { setTarget({ kind: "file", id: file.id, name: file.name }); setMode("rename"); }}
                   onMove={() => { setTarget({ kind: "file", id: file.id, name: file.name }); setMode("move"); }}
@@ -501,17 +499,18 @@ export function FileBrowser({
       )}
 
       {selected ? (
-        <section className="file-preview" ref={previewRef} aria-label={`Preview of ${selected.name}`}>
+        <Modal className="preview-modal" onClose={() => setSelectedId(null)}>
           <div className="file-preview-bar">
-            <h2>{selected.name}</h2>
+            <h2 id="file-preview-title">{selected.name}</h2>
             <div className="inline-actions">
-              <Link className="btn" href={`${base}/blob/${[...breadcrumbs.slice(1).map((crumb) => crumb.label), selected.name].map(encodeURIComponent).join("/")}`}>Open</Link>
-              <a className="btn" href={`/api/files/${selected.id}`}>Download</a>
+              <a className="btn" href={`/api/files/${selected.id}`} download={selected.name}>Download</a>
               <button type="button" className="btn" onClick={() => setSelectedId(null)}>Close</button>
             </div>
           </div>
-          <FilePreview file={selected} />
-        </section>
+          <div className="preview-modal-body">
+            <FilePreview file={selected} />
+          </div>
+        </Modal>
       ) : null}
 
       {dialog ? (

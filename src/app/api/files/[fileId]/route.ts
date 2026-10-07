@@ -32,7 +32,8 @@ export async function GET(request: Request, context: { params: Promise<{ fileId:
 
   const inline = new URL(request.url).searchParams.get("inline") === "1";
   const kind = fileKind(file.mime_type, file.extension);
-  const disposition = inline && isInlinePreview(kind) ? "inline" : "attachment";
+  const disposition = inline ? "inline" : "attachment";
+  const sandboxMedia = inline && isInlinePreview(kind);
   const source = Readable.fromWeb(upstream.body as import("node:stream/web").ReadableStream);
   const body = file.compression_type === "gzip" ? source.pipe(createGunzip()) : source;
 
@@ -50,7 +51,7 @@ export async function GET(request: Request, context: { params: Promise<{ fileId:
       "Content-Disposition": contentDisposition(disposition, file.name),
       "Cache-Control": "private, no-store",
       "X-Content-Type-Options": "nosniff",
-      "Content-Security-Policy": "sandbox; default-src 'none'; style-src 'unsafe-inline'",
+      ...(sandboxMedia ? {} : { "Content-Security-Policy": "sandbox; default-src 'none'; style-src 'unsafe-inline'" }),
     },
   });
 }
