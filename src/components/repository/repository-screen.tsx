@@ -17,7 +17,7 @@ export function RepositoryScreen({ view }: { view: Extract<RepositoryView, { mis
             <h1 style={{ margin: "0 0 0.4rem" }}>{repository.name}</h1>
             <p className="muted">{repository.description || "No description yet."}</p>
           </div>
-          <div className="inline-actions">
+          <div className="inline-actions repo-actions">
             <span className={repository.visibility === "public" ? "badge badge-public" : "badge"}>
               {repository.visibility === "public" ? "Public" : "Private"}
             </span>

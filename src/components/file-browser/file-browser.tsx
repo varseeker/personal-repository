@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
+import { createPortal } from "react-dom";
 import {
   Archive,
   Download,
@@ -34,6 +35,7 @@ import {
   prepareUploadAction,
   renameFileAction,
 } from "@/actions/file.actions";
+import { FilePreview } from "@/components/file-preview/file-preview";
 import { Modal } from "@/components/ui/modal";
 import { SubmitButton } from "@/components/ui/submit-button";
 import { useToast } from "@/components/ui/toast";
@@ -122,6 +124,14 @@ export function FileBrowser({
   const [mode, setMode] = useState<"rename" | "delete" | "move" | null>(null);
   const [duplicate, setDuplicate] = useState<{ name: string; choose: (choice: DuplicateChoice) => void } | null>(null);
   const [busy, setBusy] = useState(false);
+  const [selectedId, setSelectedId] = useState<string | null>(null);
+  const previewRef = useRef<HTMLElement>(null);
+  const selected = files.find((item) => item.id === selectedId) ?? null;
+
+  function selectFile(fileId: string) {
+    setSelectedId(fileId);
+    requestAnimationFrame(() => previewRef.current?.scrollIntoView({ block: "nearest" }));
+  }
 
   function refresh() {
     router.refresh();
@@ -465,17 +475,20 @@ export function FileBrowser({
             const folderPath = breadcrumbs.slice(1).map((crumb) => crumb.label);
             const href = `${base}/blob/${[...folderPath, file.name].map(encodeURIComponent).join("/")}`;
             const kind = fileKind(file.mimeType, file.extension);
+            const isSelected = selectedId === file.id;
             return (
-              <div className="file-row" role="row" key={file.id}>
-                <Link className="file-name" href={href}><KindIcon kind={kind} /><strong>{file.name}</strong></Link>
+              <div className="file-row" role="row" key={file.id} data-selected={isSelected || undefined}>
+                <button type="button" className="file-name" aria-pressed={isSelected} onClick={() => selectFile(file.id)}>
+                  <KindIcon kind={kind} /><strong>{file.name}</strong>
+                </button>
                 <span className="hide-sm muted">{kind}</span>
                 <span className="hide-sm muted">{formatBytes(file.originalSize)}</span>
                 <span className="hide-sm muted">{formatDate(file.updatedAt)}</span>
                 <RowMenu
                   canWrite={canWrite}
-                  previewHref={href}
                   downloadHref={`/api/files/${file.id}`}
                   onOpen={() => router.push(href)}
+                  onPreview={() => selectFile(file.id)}
                   onRename={() => { setTarget({ kind: "file", id: file.id, name: file.name }); setMode("rename"); }}
                   onMove={() => { setTarget({ kind: "file", id: file.id, name: file.name }); setMode("move"); }}
                   onDelete={() => { setTarget({ kind: "file", id: file.id, name: file.name }); setMode("delete"); }}
@@ -486,6 +499,20 @@ export function FileBrowser({
           })}
         </div>
       )}
+
+      {selected ? (
+        <section className="file-preview" ref={previewRef} aria-label={`Preview of ${selected.name}`}>
+          <div className="file-preview-bar">
+            <h2>{selected.name}</h2>
+            <div className="inline-actions">
+              <Link className="btn" href={`${base}/blob/${[...breadcrumbs.slice(1).map((crumb) => crumb.label), selected.name].map(encodeURIComponent).join("/")}`}>Open</Link>
+              <a className="btn" href={`/api/files/${selected.id}`}>Download</a>
+              <button type="button" className="btn" onClick={() => setSelectedId(null)}>Close</button>
+            </div>
+          </div>
+          <FilePreview file={selected} />
+        </section>
+      ) : null}
 
       {dialog ? (
         <Modal onClose={() => { if (!busy) setDialog(null); }}>
@@ -562,8 +589,8 @@ export function FileBrowser({
 function RowMenu({
   canWrite,
   downloadHref,
-  previewHref,
   onOpen,
+  onPreview,
   onRename,
   onMove,
   onDelete,
@@ -571,52 +598,102 @@ function RowMenu({
 }: {
   canWrite: boolean;
   downloadHref: string;
-  previewHref?: string;
   onOpen: () => void;
+  onPreview?: () => void;
   onRename: () => void;
   onMove: () => void;
   onDelete: () => void;
   onCopy: () => void;
 }) {
   const [open, setOpen] = useState(false);
-  const menuRef = useRef<HTMLDivElement>(null);
+  const [position, setPosition] = useState<{ top: number | "auto"; bottom: number | "auto"; left: number } | null>(null);
+  const rootRef = useRef<HTMLDivElement>(null);
+  const panelRef = useRef<HTMLDivElement>(null);
+
+  function place() {
+    const button = rootRef.current?.querySelector("button");
+    if (!button) return;
+    const rect = button.getBoundingClientRect();
+    const width = 256;
+    const left = Math.round(Math.max(8, Math.min(rect.right - width, window.innerWidth - width - 8)));
+    const spaceBelow = window.innerHeight - rect.bottom;
+    const openUp = spaceBelow < 280 && rect.top > spaceBelow;
+    setPosition(openUp
+      ? { top: "auto", bottom: Math.round(window.innerHeight - rect.top + 6), left }
+      : { top: Math.round(rect.bottom + 6), bottom: "auto", left });
+  }
 
   useEffect(() => {
     if (!open) return;
     function onPointer(event: MouseEvent) {
-      if (!menuRef.current?.contains(event.target as Node)) setOpen(false);
+      const target = event.target as Node;
+      if (rootRef.current?.contains(target) || panelRef.current?.contains(target)) return;
+      setOpen(false);
+      setPosition(null);
     }
     function onKey(event: KeyboardEvent) {
-      if (event.key === "Escape") setOpen(false);
+      if (event.key === "Escape") {
+        setOpen(false);
+        setPosition(null);
+      }
+    }
+    function onLayout() {
+      place();
     }
     document.addEventListener("mousedown", onPointer);
     document.addEventListener("keydown", onKey);
+    window.addEventListener("resize", onLayout);
+    window.addEventListener("scroll", onLayout, true);
     return () => {
       document.removeEventListener("mousedown", onPointer);
       document.removeEventListener("keydown", onKey);
+      window.removeEventListener("resize", onLayout);
+      window.removeEventListener("scroll", onLayout, true);
     };
   }, [open]);
 
   function choose(action: () => void) {
     setOpen(false);
+    setPosition(null);
     action();
   }
 
   return (
-    <div className="menu" ref={menuRef}>
-      <button type="button" className="icon-btn" aria-label="Item actions" aria-expanded={open} aria-haspopup="menu" onClick={() => setOpen((value) => !value)}>
+    <div className="menu" ref={rootRef}>
+      <button
+        type="button"
+        className="icon-btn"
+        aria-label="Item actions"
+        aria-expanded={open}
+        aria-haspopup="menu"
+        onClick={() => {
+          if (open) {
+            setOpen(false);
+            setPosition(null);
+            return;
+          }
+          place();
+          setOpen(true);
+        }}
+      >
         <Ellipsis size={16} aria-hidden="true" />
       </button>
-      {open ? (
-        <div className="menu-panel card" role="menu">
+      {open && position ? createPortal(
+        <div
+          ref={panelRef}
+          className="menu-panel card"
+          role="menu"
+          style={{ position: "fixed", top: position.top, bottom: position.bottom, left: position.left, zIndex: 90 }}
+        >
           <button type="button" role="menuitem" onClick={() => choose(onOpen)}>Open</button>
-          {previewHref ? <Link role="menuitem" href={previewHref} onClick={() => setOpen(false)}>Preview</Link> : null}
-          <a role="menuitem" href={downloadHref}><Download size={14} aria-hidden="true" /> Download</a>
+          {onPreview ? <button type="button" role="menuitem" onClick={() => choose(onPreview)}>Preview</button> : null}
+          <a role="menuitem" href={downloadHref} onClick={() => setOpen(false)}><Download size={14} aria-hidden="true" /> Download</a>
           <button type="button" role="menuitem" onClick={() => choose(onCopy)}><Link2 size={14} aria-hidden="true" /> Copy link</button>
           {canWrite ? <button type="button" role="menuitem" onClick={() => choose(onRename)}>Rename</button> : null}
           {canWrite ? <button type="button" role="menuitem" onClick={() => choose(onMove)}>Move</button> : null}
           {canWrite ? <button type="button" role="menuitem" onClick={() => choose(onDelete)}>Delete</button> : null}
-        </div>
+        </div>,
+        document.body,
       ) : null}
     </div>
   );
